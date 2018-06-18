@@ -17,7 +17,7 @@ class Bagging(object):
         Parameters
         ----------
         L : the class of the base learner
-        T : the number of base learners to learn
+        B : the number of base learners to learn
         """
         self.L = L
         self.B = B
@@ -34,7 +34,6 @@ class Bagging(object):
         -------
         y_hat : a prediction vector for X
         """
-
 
     def error(self, X, y):
         """

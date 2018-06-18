@@ -88,30 +88,23 @@ def helper(num_of_question):
                 if t in t_values:
                     classifiers.append(adb_h_t)
 
-        # # write the necessary values into new files
-        # with open('./training_errors.txt', 'w') as errors:
-        #
-        #     errors.write("the training errors are: \n")
-        #     errors.write("-------------------------\n")
-        #     for tr_err in training_errors:
-        #         errors.write(str(tr_err)+'\n')
-        #
-        # with open('./validation_errors.txt', 'w') as errors:
-        #
-        #     errors.write("the validation errors are: \n")
-        #     errors.write("-------------------------\n")
-        #     for val_err in validation_errors:
-        #         errors.write(str(val_err) + '\n')
-
             return training_errors, validation_errors, test_errors, classifiers,\
                    x_matrix_training, y_vector_training
 
         elif num_of_question == 4:
 
-            tree_classifier = dt.DecisionTree
-            tree_classifier.train(x_matrix_training, y_vector_training)
-
+            classifiers = list()
             d_values = [3, 6, 8, 10, 12]
+            for d in d_values:
+                tree_classifier = dt.DecisionTree(d)
+                tree_classifier.train(x_matrix_training, y_vector_training)
+                training_errors.append(tree_classifier.error(x_matrix_training, y_vector_training))
+                validation_errors.append(tree_classifier.error(x_matrix_validation, y_vector_validation))
+                test_errors.append(tree_classifier.error(x_matrix_test, y_vector_test))
+                classifiers.append(tree_classifier)
+
+            return training_errors, validation_errors, test_errors, classifiers, \
+                   x_matrix_training, y_vector_training
 
 
 def labeling(y):
@@ -120,8 +113,8 @@ def labeling(y):
     :param y: vector of labels in the relevant R_j
     :return: label
     """
-    label = 1 if(np.sum(y == (np.full(np.shape(y), 1))) > np.sum(y != (np.full(np.shape(y)),
-                                                                       1))) else -1
+    label = 1 if(np.sum(y == (np.full(np.shape(y), 1))) > np.sum(y != (np.full(np.shape(y),
+                                                                       1)))) else -1
     return label
 
 

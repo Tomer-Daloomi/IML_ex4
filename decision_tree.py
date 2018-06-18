@@ -127,6 +127,8 @@ class DecisionTree(object):
         curr_node.theta = s
         curr_node.feature = j
 
+        return curr_node
+
     def predict(self, X):
         """
         Returns
@@ -144,7 +146,7 @@ class DecisionTree(object):
 
                 j = curr_node.feature
                 s = curr_node.theta
-                curr_node = curr_node.left if X[m,j] <= s else curr_node.right
+                curr_node = curr_node.left if X[i, j] <= s else curr_node.right
 
             prediction.append(curr_node.label)
             curr_node = self.root
