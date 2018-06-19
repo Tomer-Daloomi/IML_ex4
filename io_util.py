@@ -144,7 +144,7 @@ def helper(question):
             return validation_errors, test_errors
 
 
-def labeling(y):
+def dt_labeling(y):
     """
     determines the label of the leaf when we arrive max_depth
     :param y: vector of labels in the relevant R_j
@@ -155,7 +155,7 @@ def labeling(y):
     return label
 
 
-def misclassification(y_1, y_2, label_1, label_2):
+def dt_misclassification(y_1, y_2, label_1, label_2):
     """
     the amount of misclassified examples for two y vectors and two
     possible labels after a suggested split
@@ -197,7 +197,7 @@ def split(X, y, A):
             for l_1 in [1, -1]:
                 for l_2 in [1, -1]:
 
-                    misclassified_samples = misclassification(y_r_1, y_r_2, l_1, l_2)
+                    misclassified_samples = dt_misclassification(y_r_1, y_r_2, l_1, l_2)
 
                     if misclassified_samples < min_misclassified:
                         min_misclassified = misclassified_samples

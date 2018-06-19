@@ -80,7 +80,7 @@ class DecisionTree(object):
 
         # the exit condition for the recursive process
         if depth == self.max_depth:
-            curr_node.label = iou.labeling(y)
+            curr_node.label = iou.dt_labeling(y)
             return curr_node
 
         # assuming we haven't got to a leaf - we should now decide how to split the data in the
