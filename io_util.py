@@ -111,20 +111,35 @@ def helper(question):
             return training_errors, validation_errors, test_errors, classifiers, \
                    x_matrix_training, y_vector_training
 
-        # written for question 4
+        # written for question 4 - bonus
         if question == 'bonus':
 
-            classifiers = list()
             b_values = run.B
             max_depth = 10  # since we discovered at question 4 that 10 was the optimal depth for
             #  this data
             tree_classifier = dt.DecisionTree(max_depth)
             for b in b_values:
+                print(b)
                 bagging_classifier = bag.Bagging(tree_classifier, b)
                 bagging_classifier.train(x_matrix_training, y_vector_training)
                 validation_errors.append(bagging_classifier.error(x_matrix_validation, y_vector_validation))
                 test_errors.append(bagging_classifier.error(x_matrix_test, y_vector_test))
-                classifiers.append(tree_classifier)
+
+            return validation_errors, test_errors
+
+        # written for question 5
+        if question == '5':
+
+            b_values = run.B
+            max_depth = 5  # since we discovered at question 4 that 10 was the optimal depth for
+            #  this data
+            tree_classifier = dt.DecisionTree(max_depth)
+            for b in b_values:
+                print(b)
+                bagging_classifier = bag.Bagging(tree_classifier, b)
+                bagging_classifier.train(x_matrix_training, y_vector_training)
+                validation_errors.append(bagging_classifier.error(x_matrix_validation, y_vector_validation))
+                test_errors.append(bagging_classifier.error(x_matrix_test, y_vector_test))
 
             return validation_errors, test_errors
 

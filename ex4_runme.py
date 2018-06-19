@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 T = [i for i in range(5, 205, 5)]
 d = [3, 6, 8, 10, 12]
-B = list(range(2, 101))
+B = list(range(2, 100))
 
 
 def Q3(function):  # AdaBoost
@@ -92,27 +92,26 @@ def Q4(function): # decision trees
         print('the minimizing depth is: ', min_d, "and it's test error is: ", test_err_min_d)
 
 
-def bonus(function):
+def bonus():
     # calculate the training and validation errors, and the classifiers for different values of T
     validation_errors, test_errors = iou.helper('bonus')
 
     # plot the validation errors of classifiers that were trained using bagging
     # over the different b values
-    if function == 'a':
-        plt.plot(B, validation_errors, 'c', label="validation errors")
-        plt.xlabel("B - number of 'bags' taking place in the 'bagging'")
-        plt.ylabel("Validation Error")
-        plt.legend(loc=1)
-        plt.show()
+
+    plt.plot(B, validation_errors, 'c')
+    plt.xlabel("B - number of 'bags' taking place in the 'bagging'")
+    plt.ylabel("Validation Error")
+    plt.show()
 
     # find the B value that leads to the minimal validation error,
     # and calculate it's testing error
-    if function == 'b':
-        min_b_index = np.argmin(validation_errors)
-        min_b = B[min_b_index]  # get the index of the minimal value,
-        # then multiply it by the constant gap of the T values (assuming it really is constant)
-        test_err_min_b = test_errors[min_b_index]
-        print('the minimizing depth is: ', min_b, "and it's test error is: ", test_err_min_b)
+
+    min_b_index = np.argmin(validation_errors)
+    min_b = B[min_b_index]  # get the index of the minimal value,
+    # then multiply it by the constant gap of the T values (assuming it really is constant)
+    test_err_min_b = test_errors[min_b_index]
+    print('the minimizing number of trees is: ', min_b, "and it's test error is: ", test_err_min_b)
 
 
 def Q5(): # spam data
@@ -120,5 +119,5 @@ def Q5(): # spam data
     return
 
 if __name__ == '__main__':
-    bonus('a')
+    bonus()
     pass

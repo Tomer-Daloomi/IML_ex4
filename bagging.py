@@ -11,7 +11,6 @@ Author: Yoav Wald
 import numpy as np
 import io_util as iou
 
-
 M = 150
 
 
@@ -40,8 +39,7 @@ class Bagging(object):
             m_x_samples, m_y_samples = iou.bagging_sampler(M, X, y)
             h = self.L
             h.train(m_x_samples, m_y_samples)
-            self.h.append(h)
-            print(self.h)
+            self.h[i] = h
 
     def predict(self, X):
         """
@@ -49,16 +47,19 @@ class Bagging(object):
         -------
         y_hat : a prediction vector for X
         """
-        # for every point we iterate over - C contains the predictions from all B classifiers
-        # that we achieved from training
-        C = np.empty(self.B)
-        predictions = list()
 
-        for point in X:
-            for i, h in enumerate(self.h):
-                C[i] = h.predict(point)
-            # then, we add the majority vote of this point's C as the classification
-            predictions.append(1 if np.count_nonzero(C == 1) > np.count_nonzero(C == -1) else -1)
+        C = list()
+        predictions = list()
+        m = len(X)
+
+        for h in self.h:
+            C.append(h.predict(X))
+
+        C = np.matrix(C)
+
+        for j in range(m):
+            predictions.append(1 if C[:, j].tolist().count([1]) >= C[:, j].tolist().count([-1]) else
+                               -1)
 
         predictions = np.array(predictions)
 
