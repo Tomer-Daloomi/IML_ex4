@@ -2,6 +2,8 @@ import numpy as np
 import ex4_tools
 import adaboost as adb
 import decision_tree as dt
+import ex4_runme as run
+import bagging as bag
 
 
 def text_lines_to_vector(text_lines):
@@ -36,18 +38,20 @@ def text_lines_to_matrix(text_lines):
     return matrix
 
 
-def helper(num_of_question):
+def helper(question):
     """
-    execution of question 3, including training the classifier using adaboost over different
-    values of T, and calculating the error for each of the T values (both training and validation)
+    execution of question 3,4,bonus & 5, including training the classifiers using adaboost,
+    decision trees and bagging, and calculating the error for each of the T,d or b values (both
+    training, validation & test)
 
-    :return: training errors, validation errors
+    :return: training_errors, validation_errors, test_errors, classifiers, x_matrix_training,
+    y_vector_training
     """
 
     with open("./SynData/X_train.txt", 'r') as training_x, open("./SynData/y_train.txt", 'r') as \
             training_y, open("./SynData/X_val.txt", 'r') as validation_x, \
             open("./SynData/y_val.txt", 'r') as validation_y, open("./SynData/y_test.txt",
-                                                                    'r') as test_y, \
+                                                                   'r') as test_y, \
             open("./SynData/X_test.txt", 'r') as test_x:
 
         # convert the files into vectors and matrices
@@ -65,7 +69,8 @@ def helper(num_of_question):
         validation_errors = []
         test_errors = []
 
-        if num_of_question == 3:
+        # written form question 3
+        if question == 3:
 
             wl = ex4_tools.DecisionStump
             classifiers = list()
@@ -91,7 +96,8 @@ def helper(num_of_question):
             return training_errors, validation_errors, test_errors, classifiers,\
                    x_matrix_training, y_vector_training
 
-        elif num_of_question == 4:
+        # written for question 4
+        if question == 4:
 
             classifiers = list()
             d_values = [3, 6, 8, 10, 12]
@@ -101,10 +107,26 @@ def helper(num_of_question):
                 training_errors.append(tree_classifier.error(x_matrix_training, y_vector_training))
                 validation_errors.append(tree_classifier.error(x_matrix_validation, y_vector_validation))
                 test_errors.append(tree_classifier.error(x_matrix_test, y_vector_test))
-                classifiers.append(tree_classifier)
 
             return training_errors, validation_errors, test_errors, classifiers, \
                    x_matrix_training, y_vector_training
+
+        # written for question 4
+        if question == 'bonus':
+
+            classifiers = list()
+            b_values = run.B
+            max_depth = 10  # since we discovered at question 4 that 10 was the optimal depth for
+            #  this data
+            tree_classifier = dt.DecisionTree(max_depth)
+            for b in b_values:
+                bagging_classifier = bag.Bagging(tree_classifier, b)
+                bagging_classifier.train(x_matrix_training, y_vector_training)
+                validation_errors.append(bagging_classifier.error(x_matrix_validation, y_vector_validation))
+                test_errors.append(bagging_classifier.error(x_matrix_test, y_vector_test))
+                classifiers.append(tree_classifier)
+
+            return validation_errors, test_errors
 
 
 def labeling(y):
@@ -170,4 +192,21 @@ def split(X, y, A):
                         j = feature
 
     return label_1, label_2, s, j, min_misclassified
+
+
+def bagging_sampler(m, X, y):
+    """
+    sample randomly m samples out of the original training sample
+    :param m:
+    :param X:
+    :return: a new sample group of length m
+    """
+    num__of_training_samples = np.shape(X)[0]
+    m_random_indexes = np.random.randint(1, num__of_training_samples, m)
+    m_x_samples = X[m_random_indexes]
+    m_y_samples = y[m_random_indexes]
+
+    return np.array(m_x_samples), m_y_samples
+
+
 
