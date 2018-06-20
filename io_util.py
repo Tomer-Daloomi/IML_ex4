@@ -143,6 +143,7 @@ def helper(question):
             spam_matrix = text_lines_to_matrix(spam)
 
             x_spam_matrix, y_spam_vector, x_vault_matrix, y_vault_vector = spam_modif(spam_matrix)
+
             subgroup_length = np.shape(x_spam_matrix)[0] // 5
 
             partitioned_x, partitioned_y = cross_val_partition(x_spam_matrix, y_spam_vector,
@@ -156,7 +157,7 @@ def helper(question):
             # and through each of the subsets as a validation group (cross validation)
             for j, t in enumerate(T_VALUES):
                 for i in range(5):
-                    x, y = sub_matrix(x_spam_matrix, partitioned_x, y_spam_vector, partitioned_y)
+                    x, y = sub_matrix(x_spam_matrix, partitioned_x, y_spam_vector, partitioned_y, i)
 
                     print(np.shape(x_set), np.shape(x_spam_matrix))
                     adb_h_t = adb.AdaBoost(wl, t)
@@ -278,17 +279,42 @@ def spam_modif(spam_matrix):
     return x_spam_matrix, y_spam_vector, x_vault_matrix, y_vault_vector
 
 
-def sub_matrix(original_x, original_y, partitioned_x, partitioned_y):
-    x_set = list(set(tuple(i) for i in x_spam_matrix.tolist()).symmetric_difference(
-        set(tuple(j) for j in partitioned_x[i].tolist())))
-    y_set = list(set(tuple(i) for i in y_spam_vector.tolist()).symmetric_difference(
-        set(tuple(j) for j in partitioned_y[i].tolist())))
+def sub_matrix(original_x, original_y, partitioned_x, partitioned_y, i):
+    """
+    return the relevant training sample, in relation to the current segment that was chosen as the
+    validation sample
 
-    x = np.array(list(x_set)).astype(float)
-    y = np.array(list(y_set)).astype(float)
+    :param original_x:
+    :param original_y:
+    :param partitioned_x:
+    :param partitioned_y:
+    :param i:
+    :return:
+    """
+    segment_len = len(partitioned_x)
+    full_len = len(original_x)
+
+    x_pre = original_x[0:segment_len * i]
+    x_post = original_x[segment_len * i:full_len]
+
+    y_pre = original_y[0:segment_len * i]
+    y_post = original_y[segment_len * i:full_len]
+
+    x = np.concatenate(x_pre, x_post).astype(float)
+    y = np.concatenate(y_pre, y_post).astype(float)
+
+    return x, y
 
 
 def cross_val_partition(original_x, original_y, subgroup_length):
+    """
+    create a list that contains the original spam data - split into 5 size equivalent subsets
+
+    :param original_x:
+    :param original_y:
+    :param subgroup_length:
+    :return:
+    """
     partitioned_x = [original_x[i:i + subgroup_length] for i in range(0,
                                                                          subgroup_length
                                                                          * 5,
