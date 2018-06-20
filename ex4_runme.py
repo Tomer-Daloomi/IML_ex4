@@ -116,7 +116,39 @@ def bonus():
 
 def Q5(): # spam data
 
+    # calculate the training and validation errors, and the classifiers for different values of T
+    validation_errors_adb, validation_errors_dt = iou.helper('5')
 
+    mean_err_adb = list()
+    mean_err_dt = list()
+
+    for i in range(6):
+        mean_err_adb.append(np.mean(validation_errors_adb[i]))
+        mean_err_dt.append(np.mean(validation_errors_dt[i]))
+
+    print('the minimal val_err for adb is: ', min(mean_err_adb), 'and for dt: ', min(mean_err_dt))
+
+    # plot the validation errors of classifiers that were trained using adaboost
+    # over the different T values
+
+    plt.plot(iou.T_VALUES, mean_err_adb, 'c')
+    plt.xlabel("T - number of distribution adjustment iterations")
+    plt.ylabel("Mean Validation Error")
+    plt.show()
+
+    plt.plot(iou.D_VALUES, mean_err_dt, 'r')
+    plt.xlabel("d - maximal depth allowed while training")
+    plt.ylabel("Mean Validation Error")
+    plt.show()
+
+    # # find the B value that leads to the minimal validation error,
+    # # and calculate it's testing error
+    #
+    # min_b_index = np.argmin(validation_errors)
+    # min_b = B[min_b_index]  # get the index of the minimal value,
+    # # then multiply it by the constant gap of the T values (assuming it really is constant)
+    # test_err_min_b = test_errors[min_b_index]
+    # print('the minimizing number of trees is: ', min_b, "and it's test error is: ", test_err_min_b)
 
 if __name__ == '__main__':
     Q5()

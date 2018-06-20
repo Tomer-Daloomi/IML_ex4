@@ -5,6 +5,10 @@ import decision_tree as dt
 import ex4_runme as run
 import bagging as bag
 
+VAULT = 1536
+T_VALUES = [5, 50, 100, 200, 500, 1000]
+D_VALUES = [5, 8, 10, 12, 15, 18]
+
 
 def text_lines_to_vector(text_lines):
     """
@@ -56,7 +60,7 @@ def helper(question):
 
         # convert the files into vectors and matrices
         y_vector_training = text_lines_to_vector(training_y)
-        x_matrix_training = text_lines_to_matrix(training_x)
+        spam_matrix = text_lines_to_matrix(training_x)
 
         y_vector_validation = text_lines_to_vector(validation_y)
         x_matrix_validation = text_lines_to_matrix(validation_x)
@@ -77,16 +81,16 @@ def helper(question):
 
             # adding the classifier for T = 1
             adb_h_1 = adb.AdaBoost(wl, 1)
-            adb_h_1.train(x_matrix_training, y_vector_training)
+            adb_h_1.train(spam_matrix, y_vector_training)
             classifiers.append(adb_h_1)
 
             t_values = [5, 10, 50, 100, 200]
 
             # train a classification hypothesis using adaboost for different values of T
-            for t in range(5, 205, 5):
+            for t in range(run.T):
                 adb_h_t = adb.AdaBoost(wl, t)
-                adb_h_t.train(x_matrix_training, y_vector_training)
-                training_errors.append(adb_h_t.error(x_matrix_training, y_vector_training))
+                adb_h_t.train(spam_matrix, y_vector_training)
+                training_errors.append(adb_h_t.error(spam_matrix, y_vector_training))
                 validation_errors.append(adb_h_t.error(x_matrix_validation, y_vector_validation))
                 test_errors.append(adb_h_t.error(x_matrix_test, y_vector_test))
                 # collecting the trained classifiers for part 2 of question 3
@@ -94,22 +98,22 @@ def helper(question):
                     classifiers.append(adb_h_t)
 
             return training_errors, validation_errors, test_errors, classifiers,\
-                   x_matrix_training, y_vector_training
+                   spam_matrix, y_vector_training
 
         # written for question 4
         if question == 4:
 
             classifiers = list()
-            d_values = [3, 6, 8, 10, 12]
-            for d in d_values:
+            D_VALUES = [3, 6, 8, 10, 12]
+            for d in D_VALUES:
                 tree_classifier = dt.DecisionTree(d)
-                tree_classifier.train(x_matrix_training, y_vector_training)
-                training_errors.append(tree_classifier.error(x_matrix_training, y_vector_training))
+                tree_classifier.train(spam_matrix, y_vector_training)
+                training_errors.append(tree_classifier.error(spam_matrix, y_vector_training))
                 validation_errors.append(tree_classifier.error(x_matrix_validation, y_vector_validation))
                 test_errors.append(tree_classifier.error(x_matrix_test, y_vector_test))
 
             return training_errors, validation_errors, test_errors, classifiers, \
-                   x_matrix_training, y_vector_training
+                   spam_matrix, y_vector_training
 
         # written for question 4 - bonus
         if question == 'bonus':
@@ -121,27 +125,60 @@ def helper(question):
             for b in b_values:
                 print(b)
                 bagging_classifier = bag.Bagging(tree_classifier, b)
-                bagging_classifier.train(x_matrix_training, y_vector_training)
+                bagging_classifier.train(spam_matrix, y_vector_training)
                 validation_errors.append(bagging_classifier.error(x_matrix_validation, y_vector_validation))
                 test_errors.append(bagging_classifier.error(x_matrix_test, y_vector_test))
 
             return validation_errors, test_errors
 
         # written for question 5
-        if question == '5':
 
-            b_values = run.B
-            max_depth = 5  # since we discovered at question 4 that 10 was the optimal depth for
-            #  this data
-            tree_classifier = dt.DecisionTree(max_depth)
-            for b in b_values:
-                print(b)
-                bagging_classifier = bag.Bagging(tree_classifier, b)
-                bagging_classifier.train(x_matrix_training, y_vector_training)
-                validation_errors.append(bagging_classifier.error(x_matrix_validation, y_vector_validation))
-                test_errors.append(bagging_classifier.error(x_matrix_test, y_vector_test))
+    if question == '5':
 
-            return validation_errors, test_errors
+        with open("./SpamData/spam.data") as spam:
+
+            # convert the file into a matrix and a vector, and create a list of partitioned parts
+            # for the cross validation
+
+            spam_matrix = text_lines_to_matrix(spam)
+
+            x_spam_matrix, y_spam_vector, x_vault_matrix, y_vault_vector = spam_modif(spam_matrix)
+            subgroup_length = np.shape(x_spam_matrix)[0] // 5
+
+            partitioned_x, partitioned_y = cross_val_partition(x_spam_matrix, y_spam_vector,
+                                                               subgroup_length)
+
+            # preparations for the adaboost training
+            wl = ex4_tools.DecisionStump
+            validation_errors_adb = [[None] * len(T_VALUES)]
+
+            # train a classification hypothesis using adaboost for different values of T,
+            # and through each of the subsets as a validation group (cross validation)
+            for j, t in enumerate(T_VALUES):
+                for i in range(5):
+                    x, y = sub_matrix(x_spam_matrix, partitioned_x, y_spam_vector, partitioned_y)
+
+                    print(np.shape(x_set), np.shape(x_spam_matrix))
+                    adb_h_t = adb.AdaBoost(wl, t)
+                    adb_h_t.train(x, y)
+                    validation_errors_adb[j].append(adb_h_t.error(partitioned_x[i], partitioned_y[
+                        i]))
+
+            # preparations for the decision tree training
+            validation_errors_dt = [[None] * len(D_VALUES)]
+
+            # train a classification hypothesis using decision trees for different values of depth,
+            # and through each of the subsets as a validation group (cross validation)
+            for j, d in enumerate(D_VALUES):
+                for i in range(5):
+                    x, y = sub_matrix(x_spam_matrix, partitioned_x, y_spam_vector, partitioned_y)
+
+                    tree_classifier = dt.DecisionTree(d)
+                    tree_classifier.train(x, y)
+                    validation_errors_dt[j].append(tree_classifier.error(partitioned_x[i],
+                                                                         partitioned_y[i]))
+
+            return validation_errors_adb, validation_errors_dt
 
 
 def dt_labeling(y):
@@ -224,4 +261,40 @@ def bagging_sampler(m, X, y):
     return np.array(m_x_samples), m_y_samples
 
 
+def spam_modif(spam_matrix):
 
+    last_column_number = np.shape(spam_matrix)[1]
+    y_spam_vector = spam_matrix[:, last_column_number - 1]
+    x_spam_matrix = np.delete(spam_matrix, last_column_number - 1, 1)
+
+    vault_random_indexes = np.random.choice(len(x_spam_matrix), VAULT, replace=False)
+
+    x_vault_matrix = x_spam_matrix[vault_random_indexes - 1]
+    x_spam_matrix = np.delete(x_spam_matrix, vault_random_indexes - 1, 0)
+
+    y_vault_vector = y_spam_vector[vault_random_indexes - 1]
+    y_spam_vector = np.delete(y_spam_vector, vault_random_indexes - 1, 0)
+
+    return x_spam_matrix, y_spam_vector, x_vault_matrix, y_vault_vector
+
+
+def sub_matrix(original_x, original_y, partitioned_x, partitioned_y):
+    x_set = list(set(tuple(i) for i in x_spam_matrix.tolist()).symmetric_difference(
+        set(tuple(j) for j in partitioned_x[i].tolist())))
+    y_set = list(set(tuple(i) for i in y_spam_vector.tolist()).symmetric_difference(
+        set(tuple(j) for j in partitioned_y[i].tolist())))
+
+    x = np.array(list(x_set)).astype(float)
+    y = np.array(list(y_set)).astype(float)
+
+
+def cross_val_partition(original_x, original_y, subgroup_length):
+    partitioned_x = [original_x[i:i + subgroup_length] for i in range(0,
+                                                                         subgroup_length
+                                                                         * 5,
+                                                                         subgroup_length)]
+    partitioned_y = [original_y[i:i + subgroup_length] for i in range(0,
+                                                                         subgroup_length
+                                                                         * 5,
+                                                                         subgroup_length)]
+    return partitioned_x, partitioned_y
